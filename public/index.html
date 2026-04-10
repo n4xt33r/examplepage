@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gallery</title>
+</head>
+<body>
+
+<nav>
+  <a href="/" onclick="go('/')">Home</a>
+  <a href="/admin" onclick="go('/admin')">Admin</a>
+</nav>
+
+<div id="app"></div>
+
+<script>
+function go(path) {
+  event.preventDefault();
+  history.pushState({}, "", path);
+  router();
+}
+
+async function renderHome() {
+  const res = await fetch("/images");
+  const images = await res.json();
+
+  document.getElementById("app").innerHTML = `
+    <h1>Gallery</h1>
+    ${images.map(img => `<img src="${img}" width="200"/>`).join("")}
+  `;
+}
+
+function renderAdmin() {
+  document.getElementById("app").innerHTML = `
+    <h1>Upload</h1>
+    <input type="file" id="file"/>
+    <button onclick="upload()">Upload</button>
+  `;
+}
+
+async function upload() {
+  const file = document.getElementById("file").files[0];
+  const formData = new FormData();
+  formData.append("image", file);
+
+  await fetch("/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  history.pushState({}, "", "/");
+  router();
+}
+
+function router() {
+  if (location.pathname === "/admin") {
+    renderAdmin();
+  } else {
+    renderHome();
+  }
+}
+
+window.onpopstate = router;
+router();
+</script>
+
+</body>
+</html>
